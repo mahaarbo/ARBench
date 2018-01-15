@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" version="1.1" id="svg2816" height="64px" width="64px" inkscape:version="0.48.4 r9939" sodipodi:docname="Path-BaseGeometry.svg">
+  <sodipodi:namedview pagecolor="#ffffff" bordercolor="#666666" borderopacity="1" objecttolerance="10" gridtolerance="10" guidetolerance="10" inkscape:pageopacity="0" inkscape:pageshadow="2" inkscape:window-width="1375" inkscape:window-height="811" id="namedview8" showgrid="true" inkscape:snap-global="false" inkscape:zoom="7.375" inkscape:cx="35.651266" inkscape:cy="31.713387" inkscape:window-x="65" inkscape:window-y="24" inkscape:window-maximized="1" inkscape:current-layer="svg2816">
+    <inkscape:grid type="xygrid" id="grid2985" empspacing="2" visible="true" enabled="true" snapvisiblegridlinesonly="true" />
+  </sodipodi:namedview>
+  <defs id="defs2818">
+    <linearGradient inkscape:collect="always" id="linearGradient3799">
+      <stop style="stop-color:#204a87;stop-opacity:1" offset="0" id="stop3801" />
+      <stop style="stop-color:#3465a4;stop-opacity:1" offset="1" id="stop3803" />
+    </linearGradient>
+    <linearGradient inkscape:collect="always" id="linearGradient3773">
+      <stop style="stop-color:#3465a4;stop-opacity:1" offset="0" id="stop3775" />
+      <stop style="stop-color:#729fcf;stop-opacity:1" offset="1" id="stop3777" />
+    </linearGradient>
+    <linearGradient inkscape:collect="always" xlink:href="#linearGradient3773" id="linearGradient3779" x1="21.38983" y1="54.203388" x2="19.118645" y2="38" gradientUnits="userSpaceOnUse" />
+    <linearGradient inkscape:collect="always" xlink:href="#linearGradient3799" id="linearGradient3805" x1="54.40678" y1="40.631996" x2="47.966103" y2="32.76759" gradientUnits="userSpaceOnUse" />
+  </defs>
+  <metadata id="metadata2821">
+    <rdf:RDF>
+      <cc:Work rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+        <dc:title>Path-BaseGeometry</dc:title>
+        <dc:date>2016-05-15</dc:date>
+        <dc:relation>http://www.freecadweb.org/wiki/index.php?title=Artwork</dc:relation>
+        <dc:publisher>
+          <cc:Agent>
+            <dc:title>FreeCAD</dc:title>
+          </cc:Agent>
+        </dc:publisher>
+        <dc:identifier>FreeCAD/src/Mod/Path/Gui/Resources/icons/Path-BaseGeometry.svg</dc:identifier>
+        <dc:rights>
+          <cc:Agent>
+            <dc:title>FreeCAD LGPL2+</dc:title>
+          </cc:Agent>
+        </dc:rights>
+        <cc:license>https://www.gnu.org/copyleft/lesser.html</cc:license>
+        <dc:contributor>
+          <cc:Agent>
+            <dc:title>[agryson] Alexander Gryson</dc:title>
+          </cc:Agent>
+        </dc:contributor>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <text xml:space="preserve" style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans" x="9.7627115" y="27.118645" id="text10484" sodipodi:linespacing="125%"><tspan sodipodi:role="line" id="tspan10486" x="9.7627115" y="27.118645" /></text>
+  <text xml:space="preserve" style="font-size:72px;font-style:normal;font-weight:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ef2929;fill-opacity:1;stroke:#000000;font-family:Sans;stroke-opacity:1;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none" x="33.084747" y="57.355934" id="text11000" sodipodi:linespacing="125%"><tspan sodipodi:role="line" id="tspan11002" x="33.084747" y="57.355934">T</tspan></text>
+</svg>

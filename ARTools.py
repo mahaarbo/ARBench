@@ -1,7 +1,7 @@
 import FreeCAD
 import Part
-import json # For exporting part infos
-import os # for safer path handling
+import json  # For exporting part infos
+import os    # for safer path handling
 if FreeCAD.GuiUp:
     import FreeCADGui
     from PySide import QtGui
@@ -217,7 +217,7 @@ def exportFeatureFrames(obj, ofile):
     if not of.lower().endswith(".json"):
         ofile = ofile + ".json"
     with open(ofile, "wb") as propfile:
-        json.dump(feature_dict, indent=1, separators=(',', ': '))
+        json.dump(feature_dict, propfile, indent=1, separators=(',', ': '))
     return True
 
 
@@ -237,7 +237,7 @@ def appendFeatureFrames(obj, ofile):
     else:
         partprops["features"].update(feature_dict["features"])
     with open(ofile, "wb") as propfile:
-        json.dump(partprops, indent=1, separators=(',', ': '))
+        json.dump(partprops, propfile, indent=1, separators=(',', ': '))
     return True
 
 
@@ -262,6 +262,7 @@ def exportPartInfoDialogue():
     opts = QtGui.QFileDialog.DontConfirmOverwrite
     # Create file dialog
     ofile, filt = QtGui.QFileDialog.getSaveFileName(None, textprompt,
+                                                    os.getenv("HOME"),
                                                     "*.json", options=opts)
     if ofile == "":
         # User cancelled
@@ -313,6 +314,7 @@ def exportFeatureFramesDialogue():
     opts = QtGui.QFileDialog.DontConfirmOverwrite
     # Create file dialog
     ofile, filt = QtGui.QFileDialog.getSaveFileName(None, textprompt,
+                                                    os.getenv("HOME"),
                                                     "*.json", options=opts)
     if ofile == "":
         # User cancelled
@@ -339,7 +341,7 @@ def exportFeatureFramesDialogue():
         appendFeatureFrames(unique_selected[0], ofile)
     if len(unique_selected) > 1:
         FreeCAD.Console.PrintWarning("Multi-part export not yet supported\n")
-    FreeCAD.Console.PrintMessage("Feature frames of " + str(unique_selected[0]) + "exported to " + str(ofile) + "\n")
+    FreeCAD.Console.PrintMessage("Feature frames of " + str(unique_selected[0].Label) + " exported to " + str(ofile) + "\n")
 
 
 def exportPartInfoAndFeaturesDialogue():
@@ -362,6 +364,7 @@ def exportPartInfoAndFeaturesDialogue():
     opts = QtGui.QFileDialog.DontConfirmOverwrite
     # Create file dialog
     ofile, filt = QtGui.QFileDialog.getSaveFileName(None, textprompt,
+                                                    os.getenv("HOME"),
                                                     "*.json", options=opts)
     if ofile == "":
         # User cancelled
@@ -390,7 +393,7 @@ def exportPartInfoAndFeaturesDialogue():
         appendFeatureFrames(unique_selected[0], ofile)
     if len(unique_selected) > 1:
         FreeCAD.Console.PrintWarning("Multi-part export not yet supported.\n")
-    FreeCAD.Console.PrintMessage("Feature frames of " + str(unique_selected[0]) + "exported to " + str(ofile) + "\n")
+    FreeCAD.Console.PrintMessage("Feature frames of " + str(unique_selected[0].Label) + " exported to " + str(ofile) + "\n")
 
 
 ###################################################################
@@ -413,92 +416,92 @@ def getPrimitiveInfo(prim_type, subobj, scale=1e-3):
     """returns a dictionary of the primitive's specific information."""
     d = {}
     if prim_type == "ArcOfCircle":
-        d["Radius"] = scale*subobj.Curve.Radius
-        d["Center"] = vector2list(subobj.Curve.Center, scale)
-        d["Axis"] = vector2list(subobj.Curve.Axis, scale=1)
-        d["ParamerRange"] = subobj.ParameterRange
+        d["radius"] = scale*subobj.Curve.Radius
+        d["center"] = vector2list(subobj.Curve.Center, scale)
+        d["axis"] = vector2list(subobj.Curve.Axis, scale=1)
+        d["paramerrange"] = subobj.ParameterRange
     elif prim_type == "ArcOfEllipse":
-        d["Center"] = vector2list(subobj.Curve.Center, scale)
-        d["Axis"] = vector2list(subobj.Curve.Axis, scale=1)
-        d["MajorRadius"] = scale*subobj.Curve.MajorRadius
-        d["MinorRadius"] = scale*subobj.Curve.MinorRadius
-        d["ParameterRange"] = subobj.ParameterRange
+        d["center"] = vector2list(subobj.Curve.Center, scale)
+        d["axis"] = vector2list(subobj.Curve.Axis, scale=1)
+        d["majorradius"] = scale*subobj.Curve.MajorRadius
+        d["minorradius"] = scale*subobj.Curve.MinorRadius
+        d["parameterrange"] = subobj.ParameterRange
     elif prim_type == "ArcOfHyperBola":
-        d["AngleXU"] = subobj.Curve.AngleXU
-        d["Axis"] = vector2list(subobj.Curve.Axis, scale=1)
-        d["Center"] = vector2list(subobj.Curve.Center, scale)
-        d["MajorRadius"] = scale*subobj.Curve.MajorRadius
-        d["MinorRadius"] = scale*subobj.Curve.MinorRadius
-        d["ParameterRange"] = subobj.ParameterRange
+        d["anglexu"] = subobj.Curve.AngleXU
+        d["axis"] = vector2list(subobj.Curve.Axis, scale=1)
+        d["center"] = vector2list(subobj.Curve.Center, scale)
+        d["majorradius"] = scale*subobj.Curve.MajorRadius
+        d["minorradius"] = scale*subobj.Curve.MinorRadius
+        d["parameterrange"] = subobj.ParameterRange
     elif prim_type == "ArcOfParabola":
-        d["AngleXU"] = subobj.Curve.AngleXU
-        d["Axis"] = vector2list(subobj.Curve.Axis, scale=1)
-        d["Center"] = vector2list(subobj.Curve.Center, scale)
-        d["Focal"] = scale*subobj.Curve.Focal
+        d["anglexu"] = subobj.Curve.AngleXU
+        d["axis"] = vector2list(subobj.Curve.Axis, scale=1)
+        d["center"] = vector2list(subobj.Curve.Center, scale)
+        d["focal"] = scale*subobj.Curve.Focal
     elif prim_type == "BSplineCurve":
         FreeCAD.Console.PrintWarning("getPrimitiveInfo of BSpline incomplete.")
     elif prim_type == "BezierCurve":
         FreeCAD.Console.PrintWarning("getPrimitiveInfo of Bezier incomplete.")
     elif prim_type == "Circle":
-        d["Radius"] = scale*subobj.Curve.Radius
-        d["Center"] = vector2list(subobj.Curve.Center, scale)
-        d["Axis"] = vector2list(subobj.Curve.Axis, scale=1)
-        d["ParamerRange"] = subobj.ParameterRange
+        d["radius"] = scale*subobj.Curve.Radius
+        d["center"] = vector2list(subobj.Curve.Center, scale)
+        d["axis"] = vector2list(subobj.Curve.Axis, scale=1)
+        d["paramerrange"] = subobj.ParameterRange
     elif prim_type == "Ellipse":
-        d["Center"] = vector2list(subobj.Curve.Center, scale)
-        d["Axis"] = vector2list(subobj.Curve.Axis, scale=1)
-        d["MajorRadius"] = scale*subobj.Curve.MajorRadius
-        d["MinorRadius"] = scale*subobj.Curve.MinorRadius
-        d["ParameterRange"] = subobj.ParameterRange
+        d["center"] = vector2list(subobj.Curve.Center, scale)
+        d["axis"] = vector2list(subobj.Curve.Axis, scale=1)
+        d["majorradius"] = scale*subobj.Curve.MajorRadius
+        d["minorradius"] = scale*subobj.Curve.MinorRadius
+        d["parameterrange"] = subobj.ParameterRange
     elif prim_type == "Hyperbola":
-        d["AngleXU"] = subobj.Curve.AngleXU
-        d["Axis"] = vector2list(subobj.Curve.Axis, scale=1)
-        d["Center"] = vector2list(subobj.Curve.Center, scale)
-        d["MajorRadius"] = scale*subobj.Curve.MajorRadius
-        d["MinorRadius"] = scale*subobj.Curve.MinorRadius
-        d["ParameterRange"] = subobj.ParameterRange   
+        d["anglexu"] = subobj.Curve.AngleXU
+        d["axis"] = vector2list(subobj.Curve.Axis, scale=1)
+        d["center"] = vector2list(subobj.Curve.Center, scale)
+        d["majorradius"] = scale*subobj.Curve.MajorRadius
+        d["minorradius"] = scale*subobj.Curve.MinorRadius
+        d["parameterrange"] = subobj.ParameterRange   
     elif prim_type == "Parabola":
-        d["AngleXU"] = subobj.Curve.AngleXU
-        d["Axis"] = vector2list(subobj.Curve.Axis, scale=1)
-        d["Center"] = vector2list(subobj.Curve.Center, scale)
-        d["Focal"] = scale*subobj.Curve.Focal
+        d["anglexu"] = subobj.Curve.AngleXU
+        d["axis"] = vector2list(subobj.Curve.Axis, scale=1)
+        d["center"] = vector2list(subobj.Curve.Center, scale)
+        d["focal"] = scale*subobj.Curve.Focal
     elif prim_type == "Line":
         if not subobj.Curve.Infinite:
-            d["StartPoint"] = vector2list(subobj.Curve.StartPoint)
-            d["EndPoint"] = vector2list(subobj.Curve.EndPoint)
-        d["Infinite"] = subobj.Curve.Infinite
+            d["startpoint"] = vector2list(subobj.Curve.StartPoint)
+            d["endpoint"] = vector2list(subobj.Curve.EndPoint)
+        d["infinite"] = subobj.Curve.Infinite
     elif prim_type == "BSplineSurface":
         FreeCAD.Console.PrintWarning("getPrimitiveInfo of BSpline incomplete.")
     elif prim_type == "BezierSurface":
         FreeCAD.Console.PrintWarning("getPrimitiveInfo of Bezier incomplete.")
     elif prim_type == "Cylinder":
-        d["Axis"] = subobj.Surface.Axis
-        d["Radius"] = scale*subobj.Surface.Radius
-        d["Center"] = vector2list(subobj.Surface.Center)
+        d["axis"] = vector2list(subobj.Surface.Axis, scale=1)
+        d["radius"] = scale*subobj.Surface.Radius
+        d["center"] = vector2list(subobj.Surface.Center)
         PR = list(subobj.ParameterRange)
         PR[2] = PR[2]*scale
         PR[3] = PR[3]*scale
-        d["ParameterRange"] = PR
+        d["parameterrange"] = PR
     elif prim_type == "Plane":
-        d["Axis"] = subobj.Surface.Axis
-        d["Position"] = vector2list(subobj.Surface.Position, scale)
-        d["ParameterRange"] = [scale*i for i in subobj.ParameterRange]
+        d["axis"] = vector2list(subobj.Surface.Axis, scale=1)
+        d["position"] = vector2list(subobj.Surface.Position, scale)
+        d["parameterrange"] = [scale*i for i in subobj.ParameterRange]
     elif prim_type == "Sphere":
-        d["Axis"] = vector2list(subobj.Surface.Axis, scale=1)
-        d["Center"] = vector2list(subobj.Surface.Center, scale)
-        d["Radius"] = scale*subobj.Surface.Radius
-        d["ParameterRange"] = subobj.ParameterRange
+        d["axis"] = vector2list(subobj.Surface.Axis, scale=1)
+        d["center"] = vector2list(subobj.Surface.Center, scale)
+        d["radius"] = scale*subobj.Surface.Radius
+        d["parameterrange"] = subobj.ParameterRange
     elif prim_type == "Toroid":
-        d["Axis"] = vector2list(subobj.Surface.Axis, scale=1)
-        d["Center"] = vector2list(subobj.Surface.Center, scale)
-        d["MajorRadius"] = scale*subobj.Surface.MajorRadius
-        d["MinorRadius"] = scale*subobj.Surface.MinorRadius
-        d["ParameterRange"] = subobj.Surface.ParameterRange
+        d["axis"] = vector2list(subobj.Surface.Axis, scale=1)
+        d["center"] = vector2list(subobj.Surface.Center, scale)
+        d["majorradius"] = scale*subobj.Surface.MajorRadius
+        d["minorradius"] = scale*subobj.Surface.MinorRadius
+        d["parameterrange"] = subobj.Surface.ParameterRange
     elif prim_type == "Cone":
-        d["Axis"] = vector2list(subobj.Surface.Axis, scale=1)
-        d["Center"] = vector2list(subobj.Surface.Center, scale)
-        d["Radius"] = scale*subobj.Surface.Radius
-        d["SemiAngle"] = subobj.Surface.SemiAngle
-        d["ParameterRange"] = subobj.ParameterRange
+        d["axis"] = vector2list(subobj.Surface.Axis, scale=1)
+        d["center"] = vector2list(subobj.Surface.Center, scale)
+        d["radius"] = scale*subobj.Surface.Radius
+        d["semiangle"] = subobj.Surface.SemiAngle
+        d["parameterrange"] = subobj.ParameterRange
         FreeCAD.Console.PrintWarning("getPrimitiveInfo of Cone may have wrong ParameterRange.")
     return d

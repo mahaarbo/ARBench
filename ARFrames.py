@@ -43,8 +43,8 @@ class Frame(object):
 
     def getDict(self):
         d = {}
-        d["Label"] = self.obj.Label
-        d["Placement"] = self.obj.Placement
+        d["label"] = str(self.obj.Label)
+        d["placement"] = ARTools.placement2axisvec(self.obj.Placement)
         d.update(self.additional_data)
         return d
 
@@ -68,7 +68,7 @@ class PartFrame(Frame):
 
     def getDict(self):
         d = Frame.getDict(self)
-        d["Part"] = self.obj.Part
+        d["part"] = str(self.obj.Part.Label)
         return d
 
 
@@ -95,9 +95,9 @@ class FeatureFrame(PartFrame):
 
     def getDict(self):
         d = PartFrame.getDict(self)
-        d["FeaturePlacement"] = ARTools.placement2axisvec(self.obj.FeaturePlacement)
-        d["ShapeType"] = ARTools.placement2axisvec(self.obj.ShapeType)
-        d["Positioning"] = str(self.obj.Positioning)
+        d["featureplacement"] = ARTools.placement2axisvec(self.obj.FeaturePlacement)
+        d["shapetype"] = str(self.obj.ShapeType)
+        d["positioning"] = str(self.obj.Positioning)
         return d
 
 

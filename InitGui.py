@@ -5,15 +5,18 @@ class ARBench(Workbench):
 
     def __init__(self):
         import os
-        self.Icon = os.path.join(FreeCAD.getUserAppDataDir(), "Mod", "ARBench", "UI", "icons", "frame.svg")
- 
+        self.Icon = os.path.join(FreeCAD.getUserAppDataDir(), "Mod",
+                                 "ARBench", "UI", "icons", "frame.svg")
+
     def Initialize(self):
         """This function is executed when FreeCAD starts"""
         import ARFrames
         self.framecommands = ["FrameCommand",
                               "AllPartFramesCommand",
                               "FeatureFrameCommand"]
+        self.toolcommands = ["ExportPartInfoAndFeaturesDialogueCommand"]
         self.appendToolbar("AR Frames", self.framecommands)
+        self.appendToolbar("AR Tools", self.toolcommands)
 
     def Activated(self):
         """This function is executed when the workbench is activated."""
@@ -30,7 +33,7 @@ class ARBench(Workbench):
         pass
 
     def GetClassName(self):
-        #This function is mandatory if this is a full python workbench
+        # This function is mandatory if this is a full python workbench
         return "Gui::PythonWorkbench"
 
 Gui.addWorkbench(ARBench())

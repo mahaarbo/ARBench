@@ -26,6 +26,8 @@ class Frame(object):
                         "Placement of the frame")
         obj.Placement = FreeCAD.Placement()
         obj.Proxy = self
+        self.obj = obj
+        self.additional_data = {}
 
     def onChanged(self, fp, prop):
         pass
@@ -38,6 +40,13 @@ class Frame(object):
 
     def __setstate__(self, state):
         return None
+
+    def getDict(self):
+        d = {}
+        d["Label"] = self.obj.Label
+        d["Placement"] = self.obj.Placement
+        d.update(self.additional_data)
+        return d
 
 
 class PartFrame(Frame):
@@ -56,6 +65,11 @@ class PartFrame(Frame):
     def execute(self, obj):
         if FreeCAD.GuiUp:
             obj.ViewObject.Proxy.updateData(obj, "Placement")
+
+    def getDict(self):
+        d = Frame.getDict(self)
+        d["Part"] = self.obj.Part
+        return d
 
 
 class FeatureFrame(PartFrame):
@@ -403,6 +417,9 @@ class BaseFeaturePanel(object):
         self.fframe = makeFeatureFrame(self.selected.Object, self.local_ffpl)
         self.fframe.PrimitiveType = self.so_desc[0]
         self.fframe.ShapeType = self.so_desc[1]
+        ad = ARTools.getPrimitiveInfo(self.so_desc[0],
+                                      self.selected.SubObjects[0])
+        self.fframe.Proxy.additional_data.update(ad)
 
     def scaleChanged(self):
         scale = self.form.ScaleBox.value()

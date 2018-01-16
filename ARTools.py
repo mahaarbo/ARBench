@@ -1,17 +1,23 @@
 import FreeCAD
 import Part
+import json # For exporting part infos
+import os # for safer path handling
 if FreeCAD.GuiUp:
     import FreeCADGui
-
+    from PySide import QtGui
 
 __title__ = "ARTools"
 __author__ = "Mathias Hauan Arbo"
 __workbenchname__ = "ARBench"
 __version__ = "0.1"
 __url__ = "https://github.com/mahaarbo/ARBench"
-__doc__ = """"""
+__doc__ = """
+Useful tools for the Annotations for Robotics workbench."""
 
 
+###################################################################
+# Module functions
+###################################################################
 def vector2list(vec, scale=1e-3):
     """Gives the vector as a list, set scale for scaling factor.
     default scale = 1e-3 for units in m."""
@@ -26,12 +32,29 @@ def matrix2list(mat, scale=1e-3):
             [mat.A41, mat.A42, mat.A43, mat.A44]]
 
 
-def placement2axisvec(pl):
+def placement2axisvec(pl, scale=1e-3):
     """Gives the placement as an dictionary of origin and rotation.
     origin: [x,y,z], rotation:{axis:[ax,ay,az], angle:ang}"""
-    return {"origin": vector2list(pl.Base),
+    return {"origin": vector2list(pl.Base, scale),
             "rotation": {"axis": vector2list(pl.Rotation.Axis, scale=1),
                          "angle": pl.Rotation.Angle}}
+
+
+def boundingBox2list(bb, scale=1e-3):
+    """Gives the bounding box as a list in m instead of mm"""
+    return [bb.XMin*scale, bb.XMax*scale,
+            bb.YMin*scale, bb.YMax*scale,
+            bb.ZMin*scale, bb.ZMax*scale]
+
+
+def principalProperties2dict(pp, scale=1e-3):
+    npp = {}
+    for key, value in pp.iteritems():
+        if type(value) is FreeCAD.Vector:
+            npp[key.lower()] = vector2list(value, scale=1e-3)
+        else:
+            npp[key.lower()] = value
+    return npp
 
 
 def describeSubObject(subobj):
@@ -108,7 +131,8 @@ def spawnClassCommand(classname, function, resources):
     Example usage:
     spawnClassCommand("testcommand", testfunc,
     {"Pixmap":"", "MenuText":"menutext","ToolTip":"tooltiptext"})
-    then add "testcommand" to commandlist in InitGui.py"""
+    then add "testcommand" to commandlist in InitGui.py
+    """
     def Activated(s):
         function()
 
@@ -117,3 +141,364 @@ def spawnClassCommand(classname, function, resources):
     CommandClass = type("classname", (object,), {"Activated": Activated,
                                                  "GetResources": GetResources})
     FreeCADGui.addCommand(classname, CommandClass())
+
+
+def getLocalPartProps(obj):
+    old_placement = obj.Placement
+    obj.Placement = FreeCAD.Placement()
+    # Part properties
+    partprops = {
+        "label": obj.Label,
+        "placement": placement2axisvec(old_placement),
+        "boundingbox": boundingBox2list(obj.Shape.BoundBox),
+        "volume": obj.Shape.Volume*1e-9,
+        "centerofmass": vector2list(obj.Shape.CenterOfMass),
+        "principalproperties": principalProperties2dict(obj.Shape.PrincipalProperties)
+    }
+    obj.Placement = old_placement
+    return partprops
+
+
+###################################################################
+# Export functions
+###################################################################
+def exportPartInfo(obj, ofile):
+    """
+    Exports part info to a new json file.
+    The part info includes:
+    Placement relative to world frame, bounding box, volume, center of mass,
+    principal properties.
+    For more information on principal properties, see TopoShape in OCCT
+    documentation.
+    """
+    # File path stuff
+    odir, of = os.path.split(ofile)
+    if not os.path.exists(odir):
+        os.makedirs(odir)
+    if not of.lower().endswith(".json"):
+        ofile = ofile + ".json"
+
+    partprops = getLocalPartProps(obj)
+    with open(ofile, "wb") as propfile:
+        json.dump(partprops, propfile, indent=1, separators=(',', ': '))
+    return True
+
+
+def appendPartInfo(obj, ofile):
+    """Rewrites/appends part info to an existing json file.
+    The part info includes:
+    Placement relative to world frame, bounding box, volume, center of mass,
+    principal properties.
+    For more information on principal properties, see TopoShape in OCCT
+    documentation.
+    """
+    with open(ofile, "rb") as propfile:
+        partprops = json.load(propfile)
+    new_props = getLocalPartProps(obj)
+    partprops.update(new_props)
+    with open(ofile, "wb") as propfile:
+        json.dump(partprops, propfile, indent=1, separators=(',', ': '))
+    return True
+
+
+def exportFeatureFrames(obj, ofile):
+    """Exports feature frames attached to a part."""
+    # Get the feature frames
+    import ARFrames
+    ff_check = lambda x: isinstance(x.Proxy, ARFrames.FeatureFrame)
+    ff_list = filter(ff_check, obj.InList)
+    ff_named = {ff.Label: ff.Proxy.getDict() for ff in ff_list}
+    feature_dict = {"features": ff_named}
+
+    # File stuff
+    odir, of = os.path.split(ofile)
+    if not os.path.exists(odir):
+        os.makedirs(odir)
+    if not of.lower().endswith(".json"):
+        ofile = ofile + ".json"
+    with open(ofile, "wb") as propfile:
+        json.dump(feature_dict, indent=1, separators=(',', ': '))
+    return True
+
+
+def appendFeatureFrames(obj, ofile):
+    """Rewrites/appends featureframes attached to a part to an existing json
+    file."""
+    # Get the feature frames
+    import ARFrames
+    with open(ofile, "rb") as propfile:
+        partprops = json.load(propfile)
+    ff_check = lambda x: isinstance(x.Proxy, ARFrames.FeatureFrame)
+    ff_list = filter(ff_check, obj.InList)
+    ff_named = {ff.Label: ff.Proxy.getDict() for ff in ff_list}
+    feature_dict = {"features": ff_named}
+    if "features" not in partprops.keys():
+        partprops.update(feature_dict)
+    else:
+        partprops["features"].update(feature_dict["features"])
+    with open(ofile, "wb") as propfile:
+        json.dump(partprops, indent=1, separators=(',', ': '))
+    return True
+
+
+def exportPartInfoDialogue():
+    """Spawns a dialogue window for part info exporting"""
+    # Select only true parts
+    s = FreeCADGui.Selection.getSelection()
+    FreeCADGui.Selection.clearSelection()
+    if len(s) == 0:
+        FreeCAD.Console.PrintError("No part selected.")
+        return False
+    unique_selected = []
+    for item in s:
+        if item not in unique_selected and isinstance(item, Part.Feature):
+            # Ensuring that we are parts
+            unique_selected.append(item)
+            FreeCADGui.Selection.addSelection(item)
+    # Fix wording
+    textprompt = "Save the properties of the part"
+    if len(unique_selected) > 1:
+        textprompt = textprompt + "s"
+    opts = QtGui.QFileDialog.DontConfirmOverwrite
+    # Create file dialog
+    ofile, filt = QtGui.QFileDialog.getSaveFileName(None, textprompt,
+                                                    "*.json", options=opts)
+    if ofile == "":
+        # User cancelled
+        return False
+    if os.path.exists(ofile):
+        msgbox = QtGui.QMessageBox()
+        msgbox.setText("File already exists. We can overwrite the file, or add the information/rewrite only relevant sections.")
+        append_button = msgbox.addButton(unicode("Append"),
+                                         QtGui.QMessageBox.YesRole)
+        overwrite_button = msgbox.addButton(unicode("Overwrite"),
+                                            QtGui.QMessageBox.NoRole)
+        msgbox.exec_()
+        if msgbox.clickedButton() == append_button:
+            NEWFILE = False
+        elif msgbox.clickedButton() == overwrite_button:
+            NEWFILE = True
+        else:
+            return False
+    else:
+        NEWFILE = True
+    if NEWFILE:
+        exportPartInfo(unique_selected[0], ofile)
+    else:
+        appendPartInfo(unique_selected[0], ofile)
+
+    if len(unique_selected) > 1:
+        FreeCAD.Console.PrintWarning("Multi-part export not yet supported\n")
+    FreeCAD.Console.PrintMessage("Properties exported to "+str(ofile)+"\n")
+
+
+def exportFeatureFramesDialogue():
+    """Spawns a dialogue window for a part's feature frames to be exported."""
+    # Select only true parts
+    s = FreeCADGui.Selection.getSelection()
+    FreeCADGui.Selection.clearSelection()
+    if len(s) == 0:
+        FreeCAD.Console.PrintError("No part selected.")
+        return False
+    unique_selected = []
+    for item in s:
+        if item not in unique_selected and isinstance(item, Part.Feature):
+            # Ensuring that we are parts
+            unique_selected.append(item)
+            FreeCADGui.Selection.addSelection(item)
+    # Fix wording
+    textprompt = "Save the feature frames attached to the part"
+    if len(unique_selected) > 1:
+        textprompt = textprompt + "s"
+    opts = QtGui.QFileDialog.DontConfirmOverwrite
+    # Create file dialog
+    ofile, filt = QtGui.QFileDialog.getSaveFileName(None, textprompt,
+                                                    "*.json", options=opts)
+    if ofile == "":
+        # User cancelled
+        return False
+    if os.path.exists(ofile):
+        msgbox = QtGui.QMessageBox()
+        msgbox.setText("File already exists. We can overwrite the file, or add the information/rewrite only relevant sections.")
+        append_button = msgbox.addButton(unicode("Append"),
+                                         QtGui.QMessageBox.YesRole)
+        overwrite_button = msgbox.addButton(unicode("Overwrite"),
+                                            QtGui.QMessageBox.NoRole)
+        msgbox.exec_()
+        if msgbox.clickedButton() == append_button:
+            NEWFILE = False
+        elif msgbox.clickedButton() == overwrite_button:
+            NEWFILE = True
+        else:
+            return False
+    else:
+        NEWFILE = True
+    if NEWFILE:
+        exportFeatureFrames(unique_selected[0], ofile)
+    else:
+        appendFeatureFrames(unique_selected[0], ofile)
+    if len(unique_selected) > 1:
+        FreeCAD.Console.PrintWarning("Multi-part export not yet supported\n")
+    FreeCAD.Console.PrintMessage("Feature frames of " + str(unique_selected[0]) + "exported to " + str(ofile) + "\n")
+
+
+def exportPartInfoAndFeaturesDialogue():
+    """Spawns a dialogue window for exporting both."""
+    s = FreeCADGui.Selection.getSelection()
+    FreeCADGui.Selection.clearSelection()
+    if len(s) == 0:
+        FreeCAD.Console.PrintError("No part selected.")
+        return False
+    unique_selected = []
+    for item in s:
+        if item not in unique_selected and isinstance(item, Part.Feature):
+            # Ensuring that we are parts
+            unique_selected.append(item)
+            FreeCADGui.Selection.addSelection(item)
+    # Fix wording
+    textprompt = "Save the part info and feature frames attached to the part"
+    if len(unique_selected) > 1:
+        textprompt = textprompt + "s"
+    opts = QtGui.QFileDialog.DontConfirmOverwrite
+    # Create file dialog
+    ofile, filt = QtGui.QFileDialog.getSaveFileName(None, textprompt,
+                                                    "*.json", options=opts)
+    if ofile == "":
+        # User cancelled
+        return False
+    if os.path.exists(ofile):
+        msgbox = QtGui.QMessageBox()
+        msgbox.setText("File already exists. We can overwrite the file, or add the information/rewrite only relevant sections.")
+        append_button = msgbox.addButton(unicode("Append"),
+                                         QtGui.QMessageBox.YesRole)
+        overwrite_button = msgbox.addButton(unicode("Overwrite"),
+                                            QtGui.QMessageBox.NoRole)
+        msgbox.exec_()
+        if msgbox.clickedButton() == append_button:
+            NEWFILE = False
+        elif msgbox.clickedButton() == overwrite_button:
+            NEWFILE = True
+        else:
+            return False
+    else:
+        NEWFILE = True
+    if NEWFILE:
+        exportPartInfo(unique_selected[0], ofile)
+        appendFeatureFrames(unique_selected[0], ofile)
+    else:
+        appendPartInfo(unique_selected[0], ofile)
+        appendFeatureFrames(unique_selected[0], ofile)
+    if len(unique_selected) > 1:
+        FreeCAD.Console.PrintWarning("Multi-part export not yet supported.\n")
+    FreeCAD.Console.PrintMessage("Feature frames of " + str(unique_selected[0]) + "exported to " + str(ofile) + "\n")
+
+
+###################################################################
+# GUI Commands
+###################################################################
+uidir = os.path.join(FreeCAD.getUserAppDataDir(),
+                     "Mod", __workbenchname__, "UI")
+icondir = os.path.join(uidir, "icons")
+spawnClassCommand("ExportPartInfoAndFeaturesDialogueCommand",
+                  exportPartInfoAndFeaturesDialogue,
+                  {"Pixmap": str(os.path.join(icondir, "parttojson.svg")),
+                   "MenuText": "Export info and featureframes",
+                   "ToolTip": "Export part properties (placement, C.O.M) and feature frames"})
+
+
+###################################################################
+# Information from primitive type
+###################################################################
+def getPrimitiveInfo(prim_type, subobj, scale=1e-3):
+    """returns a dictionary of the primitive's specific information."""
+    d = {}
+    if prim_type == "ArcOfCircle":
+        d["Radius"] = scale*subobj.Curve.Radius
+        d["Center"] = vector2list(subobj.Curve.Center, scale)
+        d["Axis"] = vector2list(subobj.Curve.Axis, scale=1)
+        d["ParamerRange"] = subobj.ParameterRange
+    elif prim_type == "ArcOfEllipse":
+        d["Center"] = vector2list(subobj.Curve.Center, scale)
+        d["Axis"] = vector2list(subobj.Curve.Axis, scale=1)
+        d["MajorRadius"] = scale*subobj.Curve.MajorRadius
+        d["MinorRadius"] = scale*subobj.Curve.MinorRadius
+        d["ParameterRange"] = subobj.ParameterRange
+    elif prim_type == "ArcOfHyperBola":
+        d["AngleXU"] = subobj.Curve.AngleXU
+        d["Axis"] = vector2list(subobj.Curve.Axis, scale=1)
+        d["Center"] = vector2list(subobj.Curve.Center, scale)
+        d["MajorRadius"] = scale*subobj.Curve.MajorRadius
+        d["MinorRadius"] = scale*subobj.Curve.MinorRadius
+        d["ParameterRange"] = subobj.ParameterRange
+    elif prim_type == "ArcOfParabola":
+        d["AngleXU"] = subobj.Curve.AngleXU
+        d["Axis"] = vector2list(subobj.Curve.Axis, scale=1)
+        d["Center"] = vector2list(subobj.Curve.Center, scale)
+        d["Focal"] = scale*subobj.Curve.Focal
+    elif prim_type == "BSplineCurve":
+        FreeCAD.Console.PrintWarning("getPrimitiveInfo of BSpline incomplete.")
+    elif prim_type == "BezierCurve":
+        FreeCAD.Console.PrintWarning("getPrimitiveInfo of Bezier incomplete.")
+    elif prim_type == "Circle":
+        d["Radius"] = scale*subobj.Curve.Radius
+        d["Center"] = vector2list(subobj.Curve.Center, scale)
+        d["Axis"] = vector2list(subobj.Curve.Axis, scale=1)
+        d["ParamerRange"] = subobj.ParameterRange
+    elif prim_type == "Ellipse":
+        d["Center"] = vector2list(subobj.Curve.Center, scale)
+        d["Axis"] = vector2list(subobj.Curve.Axis, scale=1)
+        d["MajorRadius"] = scale*subobj.Curve.MajorRadius
+        d["MinorRadius"] = scale*subobj.Curve.MinorRadius
+        d["ParameterRange"] = subobj.ParameterRange
+    elif prim_type == "Hyperbola":
+        d["AngleXU"] = subobj.Curve.AngleXU
+        d["Axis"] = vector2list(subobj.Curve.Axis, scale=1)
+        d["Center"] = vector2list(subobj.Curve.Center, scale)
+        d["MajorRadius"] = scale*subobj.Curve.MajorRadius
+        d["MinorRadius"] = scale*subobj.Curve.MinorRadius
+        d["ParameterRange"] = subobj.ParameterRange   
+    elif prim_type == "Parabola":
+        d["AngleXU"] = subobj.Curve.AngleXU
+        d["Axis"] = vector2list(subobj.Curve.Axis, scale=1)
+        d["Center"] = vector2list(subobj.Curve.Center, scale)
+        d["Focal"] = scale*subobj.Curve.Focal
+    elif prim_type == "Line":
+        if not subobj.Curve.Infinite:
+            d["StartPoint"] = vector2list(subobj.Curve.StartPoint)
+            d["EndPoint"] = vector2list(subobj.Curve.EndPoint)
+        d["Infinite"] = subobj.Curve.Infinite
+    elif prim_type == "BSplineSurface":
+        FreeCAD.Console.PrintWarning("getPrimitiveInfo of BSpline incomplete.")
+    elif prim_type == "BezierSurface":
+        FreeCAD.Console.PrintWarning("getPrimitiveInfo of Bezier incomplete.")
+    elif prim_type == "Cylinder":
+        d["Axis"] = subobj.Surface.Axis
+        d["Radius"] = scale*subobj.Surface.Radius
+        d["Center"] = vector2list(subobj.Surface.Center)
+        PR = list(subobj.ParameterRange)
+        PR[2] = PR[2]*scale
+        PR[3] = PR[3]*scale
+        d["ParameterRange"] = PR
+    elif prim_type == "Plane":
+        d["Axis"] = subobj.Surface.Axis
+        d["Position"] = vector2list(subobj.Surface.Position, scale)
+        d["ParameterRange"] = [scale*i for i in subobj.ParameterRange]
+    elif prim_type == "Sphere":
+        d["Axis"] = vector2list(subobj.Surface.Axis, scale=1)
+        d["Center"] = vector2list(subobj.Surface.Center, scale)
+        d["Radius"] = scale*subobj.Surface.Radius
+        d["ParameterRange"] = subobj.ParameterRange
+    elif prim_type == "Toroid":
+        d["Axis"] = vector2list(subobj.Surface.Axis, scale=1)
+        d["Center"] = vector2list(subobj.Surface.Center, scale)
+        d["MajorRadius"] = scale*subobj.Surface.MajorRadius
+        d["MinorRadius"] = scale*subobj.Surface.MinorRadius
+        d["ParameterRange"] = subobj.Surface.ParameterRange
+    elif prim_type == "Cone":
+        d["Axis"] = vector2list(subobj.Surface.Axis, scale=1)
+        d["Center"] = vector2list(subobj.Surface.Center, scale)
+        d["Radius"] = scale*subobj.Surface.Radius
+        d["SemiAngle"] = subobj.Surface.SemiAngle
+        d["ParameterRange"] = subobj.ParameterRange
+        FreeCAD.Console.PrintWarning("getPrimitiveInfo of Cone may have wrong ParameterRange.")
+    return d

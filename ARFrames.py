@@ -18,8 +18,6 @@ __doc__ = """"""
 ############################################################
 # Frame Objects
 ############################################################
-
-
 class Frame(object):
     """Basic freestanding frame"""
     def __init__(self, obj):
@@ -81,12 +79,17 @@ class FeatureFrame(PartFrame):
                         "The type of positioning used during creation.")
         obj.FeaturePlacement = featurePlacement
 
+    def getDict(self):
+        d = PartFrame.getDict(self)
+        d["FeaturePlacement"] = ARTools.placement2axisvec(self.obj.FeaturePlacement)
+        d["ShapeType"] = ARTools.placement2axisvec(self.obj.ShapeType)
+        d["Positioning"] = str(self.obj.Positioning)
+        return d
+
 
 ############################################################
 # ViewProvider to the frames
 ############################################################
-
-
 class ViewProviderFrame(object):
     """ViewProvider for the basic frame.
     Uses the SOAxiscrosskit to create axises with constant length regardless
@@ -419,7 +422,6 @@ class BaseFeaturePanel(object):
         framelabel = self.form.FrameLabelField.toPlainText()
         if not len(framelabel) == 0:
             self.fframe.Label = framelabel
-        # self.storeFeatureProperties()
         FreeCADGui.Control.closeDialog()
 
     def reject(self):
@@ -693,7 +695,6 @@ class PointOnCenterlinePanel(BaseFeaturePanel):
         self.fframe.FeaturePlacement = self.local_ffpl
         # force recompute of placement
         self.fframe.Placement = self.fframe.Placement
-        FreeCAD.Console.PrintMessage("paramChanged:"+str(value)+"\n")
 
     def choiceChanged(self, choice):
         FreeCAD.Console.PrintMessage("choiceChanged\n")

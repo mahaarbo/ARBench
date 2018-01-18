@@ -26,4 +26,4 @@ This workbench uses freecad 0.16 so far.
 5. Repeat 4 for each feature you want on each part
 6. Click a part and press the export to json button (block->textfile icon)
 7. Save json
-8. Use the json with whatever you want. E.g. `part_frames_publisher`.
+8. Use the json with whatever you want. E.g. [`arbench_part_publisher`](https://github.com/mahaarbo/arbench_part_publisher)

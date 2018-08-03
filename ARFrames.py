@@ -161,7 +161,7 @@ class ViewProviderFrame(object):
             pl = fp.getPropertyByName("Placement")
             self.transform.translation = (pl.Base.x,
                                           pl.Base.y,
-                                          pl.Base.Z)
+                                          pl.Base.z)
             self.transform.rotation = pl.Rotation.Q
 
     def getDisplayModes(self, vobj):
@@ -309,7 +309,7 @@ class FeatureFramePanel:
         else:
             FreeCAD.Console.PrintError("Multipart selection not available.")
             self.reject()
-    
+
         if not selected.HasSubObjects:
             FreeCAD.Console.PrintError("Part selected not feature.")
             self.reject()
@@ -377,6 +377,7 @@ class FeatureFramePanel:
                      "Center": CenterPanel,
                      "PointOnCenterline": PointOnCenterlinePanel}
         new_panel = paneldict[sel_choice](self.selected, self.so_desc)
+        ############## PROBLEM HERE ##################
         FreeCADGui.Control.closeDialog()
         FreeCADGui.Control.showDialog(new_panel)
 

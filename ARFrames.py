@@ -356,7 +356,6 @@ class FeatureFramePanel:
         QtCore.QObject.connect(self.form.ChoicesBox,
                                QtCore.SIGNAL("currentIndexChanged(QString)"),
                                self.choiceChanged)
-        # Setting up relevant illustrations
         self.scenes = {}
         for choice in self.choices:
             sc = QtGui.QGraphicsScene()
@@ -376,10 +375,12 @@ class FeatureFramePanel:
                      "PointOnSurface": PointOnSurfacePanel,
                      "Center": CenterPanel,
                      "PointOnCenterline": PointOnCenterlinePanel}
-        new_panel = paneldict[sel_choice](self.selected, self.so_desc)
-        ############## PROBLEM HERE ##################
+        pan = paneldict[sel_choice](self.selected, self.so_desc)
         FreeCADGui.Control.closeDialog()
-        FreeCADGui.Control.showDialog(new_panel)
+        # The dialog is actually closed after the accept function has
+        # completed. So we need to use a delayed task to open the new dialog:
+        QtCore.QTimer.singleShot(0,
+                                 lambda: FreeCADGui.Control.showDialog(pan))
 
     def reject(self):
         FreeCADGui.Control.closeDialog()

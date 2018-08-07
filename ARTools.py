@@ -393,7 +393,9 @@ def exportPartInfoAndFeaturesDialogue():
         appendFeatureFrames(unique_selected[0], ofile)
     if len(unique_selected) > 1:
         FreeCAD.Console.PrintWarning("Multi-part export not yet supported.\n")
-    FreeCAD.Console.PrintMessage("Feature frames of " + str(unique_selected[0].Label) + " exported to " + str(ofile) + "\n")
+    FreeCAD.Console.PrintMessage("Feature frames of "
+                                 + str(unique_selected[0].Label)
+                                 + " exported to " + str(ofile) + "\n")
 
 
 ###################################################################
@@ -419,7 +421,7 @@ def getPrimitiveInfo(prim_type, subobj, scale=1e-3):
         d["radius"] = scale*subobj.Curve.Radius
         d["center"] = vector2list(subobj.Curve.Center, scale)
         d["axis"] = vector2list(subobj.Curve.Axis, scale=1)
-        d["paramerrange"] = subobj.ParameterRange
+        d["parameterrange"] = subobj.ParameterRange
     elif prim_type == "ArcOfEllipse":
         d["center"] = vector2list(subobj.Curve.Center, scale)
         d["axis"] = vector2list(subobj.Curve.Axis, scale=1)
@@ -446,7 +448,7 @@ def getPrimitiveInfo(prim_type, subobj, scale=1e-3):
         d["radius"] = scale*subobj.Curve.Radius
         d["center"] = vector2list(subobj.Curve.Center, scale)
         d["axis"] = vector2list(subobj.Curve.Axis, scale=1)
-        d["paramerrange"] = subobj.ParameterRange
+        d["parameterrange"] = subobj.ParameterRange
     elif prim_type == "Ellipse":
         d["center"] = vector2list(subobj.Curve.Center, scale)
         d["axis"] = vector2list(subobj.Curve.Axis, scale=1)
@@ -459,17 +461,22 @@ def getPrimitiveInfo(prim_type, subobj, scale=1e-3):
         d["center"] = vector2list(subobj.Curve.Center, scale)
         d["majorradius"] = scale*subobj.Curve.MajorRadius
         d["minorradius"] = scale*subobj.Curve.MinorRadius
-        d["parameterrange"] = subobj.ParameterRange   
+        d["parameterrange"] = subobj.ParameterRange
     elif prim_type == "Parabola":
         d["anglexu"] = subobj.Curve.AngleXU
         d["axis"] = vector2list(subobj.Curve.Axis, scale=1)
         d["center"] = vector2list(subobj.Curve.Center, scale)
         d["focal"] = scale*subobj.Curve.Focal
     elif prim_type == "Line":
-        if not subobj.Curve.Infinite:
+        if not hasattr(subobj.Curve, "Infinite"):
             d["startpoint"] = vector2list(subobj.Curve.StartPoint)
             d["endpoint"] = vector2list(subobj.Curve.EndPoint)
-        d["infinite"] = subobj.Curve.Infinite
+        if hasattr(subobj.Curve, "Infinite"):
+            if subobj.Curve.Infinite:
+                d["infinite"] = subobj.Curve.Infinite
+            else:
+                d["startpoint"] = vector2list(subobj.Curve.StartPoint)
+                d["endpoint"] = vector2list(subobj.Curve.EndPoint)
     elif prim_type == "BSplineSurface":
         FreeCAD.Console.PrintWarning("getPrimitiveInfo of BSpline incomplete.")
     elif prim_type == "BezierSurface":

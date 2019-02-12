@@ -468,15 +468,21 @@ def getPrimitiveInfo(prim_type, subobj, scale=1e-3):
         d["center"] = vector2list(subobj.Curve.Center, scale)
         d["focal"] = scale*subobj.Curve.Focal
     elif prim_type == "Line":
-        if not hasattr(subobj.Curve, "Infinite"):
-            d["startpoint"] = vector2list(subobj.Curve.StartPoint)
-            d["endpoint"] = vector2list(subobj.Curve.EndPoint)
-        if hasattr(subobj.Curve, "Infinite"):
-            if subobj.Curve.Infinite:
-                d["infinite"] = subobj.Curve.Infinite
-            else:
+        if int(FreeCAD.Version()[1]) > 16:
+            sp = subobj.valueAt(subobj.FirstParameter)
+            ep = subobj.valueAt(subobj.LastParameter)
+            d["startpoint"] = vector2list(sp)
+            d["endpoint"] = vector2list
+        else:
+            if not hasattr(subobj.Curve, "Infinite"):
                 d["startpoint"] = vector2list(subobj.Curve.StartPoint)
                 d["endpoint"] = vector2list(subobj.Curve.EndPoint)
+            if hasattr(subobj.Curve, "Infinite"):
+                if subobj.Curve.Infinite:
+                    d["infinite"] = subobj.Curve.Infinite
+                else:
+                    d["startpoint"] = vector2list(subobj.Curve.StartPoint)
+                    d["endpoint"] = vector2list(subobj.Curve.EndPoint)
     elif prim_type == "BSplineSurface":
         FreeCAD.Console.PrintWarning("getPrimitiveInfo of BSpline incomplete.")
     elif prim_type == "BezierSurface":

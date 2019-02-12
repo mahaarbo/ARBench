@@ -3,18 +3,17 @@
 Annotation for robotics bench. A FreeCAD workbench for annotating frames of interest, exporting these w.r.t. the part frame, and exporting part information.
 
 # Installation instructions
-This workbench uses freecad 0.16 so far.
+This workbench supports versions of FreeCAD>0.16.
 
-0. If you're on ubuntu 14.04, you have to run: `sudo add-apt-reposityory ppa:freecad-maintainers/freecad-stable` then `sudo apt-get update`,
-1. Install FreeCAD 
-`sudo apt-get install Freecad`
-2. Custom workbenches are located in `.FreeCAD/Mod/` under your home directory
+1. [Install FreeCAD](https://www.freecadweb.org/wiki/Installing)
+2. If you're not on Ubuntu follow the [workbench installation instructions](https://www.freecadweb.org/wiki/How_to_install_additional_workbenches) or you can do the following on Ubuntu.
+3. Custom workbenches are located in `.FreeCAD/Mod/` under your home directory
 `cd ~/.FreeCAD/Mod/`
 3. Either
    - Clone the repository there
-   - symlink the cloned repo in there
+   - symlink the cloned repo in there (`ln -s ./ARBench ~/.FreeCAD/ARBench`)
 4. Start the workbench by
-   1. Run FreeCAD
+   1. Running FreeCAD
    2. Open a STEP file
    3. Open the `ARBench` workbench
 

@@ -244,14 +244,22 @@ def makeFrame(placement=FreeCAD.Placement()):
 def makePartFrame(part):
     obj = FreeCAD.ActiveDocument.addObject("App::FeaturePython", "PartFrame")
     PartFrame(obj, part)
+    if int(FreeCAD.Version()[1]) > 16:
+        geo_feature_group = part.getParentGeoFeatureGroup()
+        geo_feature_group.addObject(obj)
     if FreeCAD.GuiUp:
         ViewProviderPartFrame(obj.ViewObject)
     return obj
 
 
 def makeFeatureFrame(part, featurepl):
-    obj = FreeCAD.ActiveDocument.addObject("App::FeaturePython", "FeatureFrame")
+    obj = FreeCAD.ActiveDocument.addObject("App::FeaturePython",
+                                           "FeatureFrame")
     FeatureFrame(obj, part, featurepl)
+    # If we're >0.16, add the feature frame to the assembly 
+    if int(FreeCAD.Version()[1]) > 16:
+        geo_feature_group = part.getParentGeoFeatureGroup()
+        geo_feature_group.addObject(obj)
     if FreeCAD.GuiUp:
         ViewProviderFeatureFrame(obj.ViewObject)
     return obj

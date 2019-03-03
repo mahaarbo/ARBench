@@ -172,7 +172,8 @@ class ViewProviderFrame(object):
         return "Shaded"
 
     def getIcon(self):
-        icondir = os.path.join(FreeCAD.getUserAppDataDir(), "Mod", __workbenchname__, "UI", "icons")
+        icondir = os.path.join(FreeCAD.getUserAppDataDir(),
+                               "Mod", __workbenchname__, "UI", "icons")
         return str(os.path.join(icondir, "frame.svg"))
 
     def onChanged(self, vp, prop):
@@ -256,7 +257,7 @@ def makeFeatureFrame(part, featurepl):
     obj = FreeCAD.ActiveDocument.addObject("App::FeaturePython",
                                            "FeatureFrame")
     FeatureFrame(obj, part, featurepl)
-    # If we're >0.16, add the feature frame to the assembly 
+    # If we're >0.16, add the feature frame to the assembly
     if int(FreeCAD.Version()[1]) > 16:
         geo_feature_group = part.getParentGeoFeatureGroup()
         geo_feature_group.addObject(obj)
@@ -619,7 +620,6 @@ class PointOnSurfacePanel(BaseFeaturePanel):
             self.form.VBox.setSingleStep(1.0)
         self.form.UBox.setValue(value[0])
         self.form.VBox.setValue(value[1])
-
 
     def p2mm(self, value):
         parameter_range = self.selected.SubObjects[0].ParameterRange
